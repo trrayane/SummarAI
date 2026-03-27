@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SummAI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f4f0;
+      --sidebar: #efefeb;
+      --white: #ffffff;
+      --border: #e2e1db;
+      --text: #1a1a18;
+      --muted: #888880;
+      --accent: #1a6bff;
+      --accent-hover: #0052e0;
+      --danger: #e84040;
+      --radius: 10px;
+      --sidebar-w: 240px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 20px 12px;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .logo {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.3rem;
+      color: var(--text);
+      padding: 4px 10px 16px;
+      letter-spacing: -0.3px;
+    }
+
+    .new-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: var(--radius);
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+      width: 100%;
+      text-align: left;
+    }
+
+    .new-btn:hover { background: var(--border); }
+
+    .new-btn .icon {
+      width: 28px; height: 28px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    .section-label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 12px 10px 6px;
+    }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background 0.15s;
+      font-size: 0.82rem;
+      color: var(--text);
+      font-weight: 400;
+    }
+
+    .history-item:hover { background: var(--border); }
+    .history-item.active { background: var(--white); font-weight: 500; }
+
+    .history-item .file-icon {
+      font-size: 0.85rem;
+      flex-shrink: 0;
+      color: var(--muted);
+    }
+
+    .history-item .file-icon.pdf { color: var(--danger); }
+
+    .history-item span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+    }
+
+    .history-item .style-tag {
+      font-size: 0.65rem;
+      background: var(--border);
+      color: var(--muted);
+      padding: 1px 6px;
+      border-radius: 20px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .sidebar-footer:hover { background: var(--border); }
+
+    .avatar {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .avatar-name {
+      font-size: 0.82rem;
+      font-weight: 500;
+      flex: 1;
+    }
+
+    /* ── MAIN ── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    /* Top bar */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 14px 24px;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .style-select {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--text);
+      transition: border-color 0.15s;
+    }
+
+    .style-select:hover { border-color: #bbb; }
+
+    .style-dropdown {
+      position: relative;
+    }
+
+    .style-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px;
+      min-width: 160px;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    .style-menu.open { display: block; }
+
+    .style-option {
+      padding: 8px 12px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 400;
+      transition: background 0.12s;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .style-option:hover { background: var(--bg); }
+    .style-option.selected { font-weight: 600; color: var(--accent); }
+
+    /* Content area */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Welcome state */
+    .welcome {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      gap: 8px;
+    }
+
+    .welcome h1 {
+      font-family: 'Instrument Serif', serif;
+      font-size: 2.2rem;
+      font-weight: 400;
+      letter-spacing: -0.5px;
+      color: var(--text);
+    }
+
+    .welcome p {
+      font-size: 0.9rem;
+      color: var(--muted);
+      text-align: center;
+      max-width: 360px;
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+
+    /* Summary view */
+    .summary-view {
+      display: none;
+      flex: 1;
+      padding: 40px;
+      max-width: 760px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .summary-view.visible { display: block; }
+
+    .summary-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .summary-source {
+      font-size: 0.78rem;
+      color: var(--muted);
+      background: var(--white);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    .summary-style-badge {
+      font-size: 0.78rem;
+      color: var(--accent);
+      background: #e8f0ff;
+      border: 1px solid #c5d8ff;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+
+    .summary-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.6rem;
+      font-weight: 400;
+      margin-bottom: 16px;
+      letter-spacing: -0.3px;
+      line-height: 1.3;
+    }
+
+    .summary-body {
+      font-size: 0.92rem;
+      line-height: 1.8;
+      color: #2a2a28;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .summary-body.streaming::after {
+      content: '▋';
+      animation: blink 0.7s infinite;
+      color: var(--accent);
+    }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* Input box */
+    .input-area {
+      padding: 16px 24px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .input-box {
+      width: 100%;
+      max-width: 640px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .input-box:focus-within {
+      border-color: #b0c4ff;
+      box-shadow: 0 2px 20px rgba(26,107,255,0.1);
+    }
+
+    textarea {
+      width: 100%;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      color: var(--text);
+      resize: none;
+      min-height: 24px;
+      max-height: 140px;
+      overflow-y: auto;
+      line-height: 1.5;
+    }
+
+    textarea::placeholder { color: #bbb; }
+
+    .input-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+
+    .input-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .attach-btn {
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem;
+      color: var(--muted);
+      transition: all 0.15s;
+    }
+
+    .attach-btn:hover { border-color: #bbb; color: var(--text); }
+    .attach-btn.has-file { background: #e8f0ff; border-color: #c5d8ff; color: var(--accent); }
+
+    .file-name-pill {
+      display: none;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.75rem;
+      color: var(--accent);
+      background: #e8f0ff;
+      border: 1px solid #c5d8ff;
+      padding: 3px 10px 3px 7px;
+      border-radius: 20px;
+    }
+
+    .file-name-pill.visible { display: flex; }
+
+    .file-name-pill button {
+      border: none; background: none; cursor: pointer;
+      color: var(--accent); font-size: 0.8rem; padding: 0; line-height: 1;
+    }
+
+    .send-btn {
+      width: 32px; height: 32px;
+      background: var(--text);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: white;
+      font-size: 0.8rem;
+      transition: opacity 0.15s;
+      flex-shrink: 0;
+    }
+
+    .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .send-btn:hover:not(:disabled) { opacity: 0.8; }
+
+    #fileInput { display: none; }
+
+    /* Scrollbar */
+    .content::-webkit-scrollbar { width: 5px; }
+    .content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="logo">∑ SummAI</div>
+
+  <button class="new-btn" onclick="newSession()">
+    <div class="icon">✦</div>
+    New summary
+  </button>
+
+  <div class="section-label">Recent</div>
+  <div id="historyList"></div>
+
+  <div class="sidebar-footer">
+    <div class="avatar">U</div>
+    <span class="avatar-name">My workspace</span>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="style-dropdown">
+      <div class="style-select" onclick="toggleStyleMenu()">
+        <span id="styleLabel">⚡ Concis</span>
+        <span style="color:var(--muted); font-size:0.7rem;">▾</span>
+      </div>
+      <div class="style-menu" id="styleMenu">
+        <div class="style-option selected" onclick="setStyle('concis', '⚡ Concis', this)">⚡ Concis</div>
+        <div class="style-option" onclick="setStyle('détaillé', '📄 Détaillé', this)">📄 Détaillé</div>
+        <div class="style-option" onclick="setStyle('bullet', '• Bullet Points', this)">• Bullet Points</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content" id="content">
+    <div class="welcome" id="welcome">
+      <h1>Hi, what can I summarize?</h1>
+      <p>Upload a document, paste text, or type directly to get clear summaries in seconds.</p>
+    </div>
+
+    <div class="summary-view" id="summaryView">
+      <div class="summary-meta">
+        <span class="summary-source" id="summarySource">Text input</span>
+        <span class="summary-style-badge" id="summaryStyleBadge">Concis</span>
+      </div>
+      <div class="summary-title" id="summaryTitle"></div>
+      <div class="summary-body" id="summaryBody"></div>
+    </div>
+  </div>
+
+  <!-- INPUT -->
+  <div class="input-area">
+    <div class="input-box">
+      <textarea id="userInput" placeholder="Start typing or paste a web link…" rows="1"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"
+        oninput="autoResize(this)"></textarea>
+      <div class="input-actions">
+        <div class="input-left">
+          <button class="attach-btn" id="attachBtn" onclick="document.getElementById('fileInput').click()" title="Upload file">📎</button>
+          <div class="file-name-pill" id="fileNamePill">
+            <span>📄</span>
+            <span id="fileNameText"></span>
+            <button onclick="clearFile()">×</button>
+          </div>
+        </div>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
+    <input type="file" id="fileInput" accept=".pdf,.docx,.txt" onchange="handleFile(this)"/>
+  </div>
+</div>
+
+<script>
+  let currentStyle = 'concis';
+  let currentFile = null;
+  let isStreaming = false;
+  let sessionHistory = [];
+
+  // ── Style selector ──
+  function toggleStyleMenu() {
+    document.getElementById('styleMenu').classList.toggle('open');
+  }
+
+  function setStyle(val, label, el) {
+    currentStyle = val;
+    document.getElementById('styleLabel').textContent = label;
+    document.querySelectorAll('.style-option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('styleMenu').classList.remove('open');
+  }
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.style-dropdown')) {
+      document.getElementById('styleMenu').classList.remove('open');
+    }
+  });
+
+  // ── File handling ──
+  function handleFile(input) {
+    const file = input.files[0];
+    if (!file) return;
+    currentFile = file;
+    document.getElementById('attachBtn').classList.add('has-file');
+    document.getElementById('fileNameText').textContent = file.name.length > 20 ? file.name.slice(0, 20) + '…' : file.name;
+    document.getElementById('fileNamePill').classList.add('visible');
+  }
+
+  function clearFile() {
+    currentFile = null;
+    document.getElementById('fileInput').value = '';
+    document.getElementById('attachBtn').classList.remove('has-file');
+    document.getElementById('fileNamePill').classList.remove('visible');
+  }
+
+  // ── Auto resize textarea ──
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+  }
+
+  // ── New session ──
+  function newSession() {
+    document.getElementById('welcome').style.display = 'flex';
+    document.getElementById('summaryView').classList.remove('visible');
+    document.getElementById('userInput').value = '';
+    clearFile();
+  }
+
+  // ── Load history item ──
+  function loadHistoryItem(item) {
+    showSummary(item.text, item.summary, item.style, item.source);
+    // Mark active
+    document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
+    const el = document.querySelector(`[data-id="${item.id}"]`);
+    if (el) el.classList.add('active');
+  }
+
+  // ── Show summary view ──
+  function showSummary(inputText, summaryText, style, source) {
+    document.getElementById('welcome').style.display = 'none';
+    const view = document.getElementById('summaryView');
+    view.classList.add('visible');
+
+    // Title = first 6 words of input
+    const words = inputText.trim().split(/\s+/).slice(0, 6).join(' ');
+    document.getElementById('summaryTitle').textContent = words + (inputText.split(/\s+/).length > 6 ? '…' : '');
+    document.getElementById('summarySource').textContent = source || 'Text input';
+    document.getElementById('summaryStyleBadge').textContent = style;
+    document.getElementById('summaryBody').textContent = summaryText;
+  }
+
+  // ── Add to sidebar history ──
+  function addToSidebar(item) {
+    sessionHistory.unshift(item);
+    renderSidebar();
+  }
+
+  function renderSidebar() {
+    const list = document.getElementById('historyList');
+    list.innerHTML = '';
+    sessionHistory.slice(0, 12).forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'history-item';
+      div.dataset.id = item.id;
+      const isPDF = item.source && item.source.endsWith('.pdf');
+      div.innerHTML = `
+        <span class="file-icon ${isPDF ? 'pdf' : ''}">
+          ${isPDF ? '📄' : '✦'}
+        </span>
+        <span>${item.title}</span>
+        <span class="style-tag">${item.style.slice(0,3)}</span>
+      `;
+      div.onclick = () => loadHistoryItem(item);
+      list.appendChild(div);
+    });
+  }
+
+  // ── Send message ──
+  async function sendMessage() {
+    if (isStreaming) return;
+    const input = document.getElementById('userInput');
+    const text = input.value.trim();
+    if (!text && !currentFile) return;
+
+    isStreaming = true;
+    document.getElementById('sendBtn').disabled = true;
+
+    const source = currentFile ? currentFile.name : 'Text input';
+    const styleLabel = currentStyle === 'concis' ? 'Concis' : currentStyle === 'détaillé' ? 'Détaillé' : 'Bullet Points';
+
+    // Show summary view immediately
+    document.getElementById('welcome').style.display = 'none';
+    const view = document.getElementById('summaryView');
+    view.classList.add('visible');
+
+    const words = (text || currentFile.name).trim().split(/\s+/).slice(0, 6).join(' ');
+    document.getElementById('summaryTitle').textContent = words + '…';
+    document.getElementById('summarySource').textContent = source;
+    document.getElementById('summaryStyleBadge').textContent = styleLabel;
+
+    const body = document.getElementById('summaryBody');
+    body.textContent = '';
+    body.classList.add('streaming');
+
+    // Build FormData
+    const formData = new FormData();
+    formData.append('text', text);
+    formData.append('style', currentStyle);
+    if (currentFile) formData.append('file', currentFile);
+
+    let fullSummary = '';
+
+    try {
+      const response = await fetch('/api/v1/summarize', { method: 'POST', body: formData });
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const token = line.slice(6);
+            if (token === '[DONE]') break;
+            fullSummary += token;
+            body.textContent = fullSummary;
+            body.style.whiteSpace = 'pre-wrap';
+            document.getElementById('content').scrollTop = 99999;
+          }
+        }
+      }
+    } catch(e) {
+      body.textContent = '⚠️ Connection error. Is the server running?';
+    }
+
+    body.classList.remove('streaming');
+
+    // Fix title with actual text
+    const finalWords = (text || currentFile?.name || '').trim().split(/\s+/).slice(0, 6).join(' ');
+    document.getElementById('summaryTitle').textContent = finalWords + ((text || '').split(/\s+/).length > 6 ? '…' : '');
+
+    // Add to sidebar
+    const item = {
+      id: Date.now(),
+      title: finalWords + '…',
+      text: text,
+      summary: fullSummary,
+      style: styleLabel,
+      source: source,
+    };
+    addToSidebar(item);
+
+    // Reset
+    input.value = '';
+    input.style.height = 'auto';
+    clearFile();
+    isStreaming = false;
+    document.getElementById('sendBtn').disabled = false;
+  }
+
+  // ── Load server history on start ──
+  async function loadServerHistory() {
+    try {
+      const res = await fetch('/api/v1/history?limit=10');
+      const data = await res.json();
+      data.forEach((item, i) => {
+        sessionHistory.push({
+          id: i,
+          title: item.summary ? item.summary.split(/\s+/).slice(0, 5).join(' ') + '…' : 'Summary',
+          text: item.original_text || '',
+          summary: item.summary || '',
+          style: item.style || 'concis',
+          source: 'Text input',
+        });
+      });
+      renderSidebar();
+    } catch(e) {}
+  }
+
+  loadServerHistory();
+</script>
+</body>
+</html>
