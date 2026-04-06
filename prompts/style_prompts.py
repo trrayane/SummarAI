@@ -78,15 +78,22 @@ TONE RULE:
   * Casual/General text → simple, direct tone
 
 CONTENT RULES:
-- Exactly 5 to 7 bullet points (•)
+- Exactly 5 to 7 bullet points
+- Use ONLY the character • (Unicode bullet) to start each point. NEVER use *, -, or any other character
 - Each bullet = exactly 1 key idea in 1 sentence
 - Start each bullet with a strong action verb or key noun
 - Order bullets by importance (most important first)
 - Never copy sentences verbatim from the source
 - No sub-bullets, no nested lists
 
+IMPORTANT FORMAT RULE:
+- Start EVERY bullet with the character • (copy this exact character: •)
+- Do NOT use *, -, or any other character to start bullets
+- Do NOT add any introduction sentence before the bullets
+- Output the bullets DIRECTLY, nothing else
+
 Text to summarize:
-{key_content}
+{text}
 """
 }
 

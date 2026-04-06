@@ -2,9 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+  <meta http-equiv="Pragma" content="no-cache"/>
+  <meta http-equiv="Expires" content="0"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SummAI</title>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -31,7 +35,7 @@
       overflow: hidden;
     }
 
-    /* ── SIDEBAR ── */
+    /* ── Sidebar ── */
     .sidebar {
       width: var(--sidebar-w);
       background: var(--sidebar);
@@ -105,13 +109,7 @@
 
     .history-item:hover { background: var(--border); }
     .history-item.active { background: var(--white); font-weight: 500; }
-
-    .history-item .file-icon {
-      font-size: 0.85rem;
-      flex-shrink: 0;
-      color: var(--muted);
-    }
-
+    .history-item .file-icon { font-size: 0.85rem; flex-shrink: 0; color: var(--muted); }
     .history-item .file-icon.pdf { color: var(--danger); }
 
     .history-item span {
@@ -154,13 +152,9 @@
       flex-shrink: 0;
     }
 
-    .avatar-name {
-      font-size: 0.82rem;
-      font-weight: 500;
-      flex: 1;
-    }
+    .avatar-name { font-size: 0.82rem; font-weight: 500; flex: 1; }
 
-    /* ── MAIN ── */
+    /* ── Main ── */
     .main {
       flex: 1;
       display: flex;
@@ -169,7 +163,6 @@
       background: var(--bg);
     }
 
-    /* Top bar */
     .topbar {
       display: flex;
       align-items: center;
@@ -193,14 +186,9 @@
       font-weight: 500;
       cursor: pointer;
       color: var(--text);
-      transition: border-color 0.15s;
     }
 
-    .style-select:hover { border-color: #bbb; }
-
-    .style-dropdown {
-      position: relative;
-    }
+    .style-dropdown { position: relative; }
 
     .style-menu {
       display: none;
@@ -223,7 +211,6 @@
       border-radius: 7px;
       cursor: pointer;
       font-size: 0.82rem;
-      font-weight: 400;
       transition: background 0.12s;
       display: flex; align-items: center; gap: 8px;
     }
@@ -231,7 +218,7 @@
     .style-option:hover { background: var(--bg); }
     .style-option.selected { font-weight: 600; color: var(--accent); }
 
-    /* Content area */
+    /* ── Content ── */
     .content {
       flex: 1;
       overflow-y: auto;
@@ -239,7 +226,6 @@
       flex-direction: column;
     }
 
-    /* Welcome state */
     .welcome {
       flex: 1;
       display: flex;
@@ -255,7 +241,6 @@
       font-size: 2.2rem;
       font-weight: 400;
       letter-spacing: -0.5px;
-      color: var(--text);
     }
 
     .welcome p {
@@ -264,14 +249,12 @@
       text-align: center;
       max-width: 360px;
       line-height: 1.6;
-      margin-bottom: 12px;
     }
 
-    /* Summary view */
     .summary-view {
       display: none;
       flex: 1;
-      padding: 40px;
+      padding: 40px 40px 20px;
       max-width: 760px;
       width: 100%;
       margin: 0 auto;
@@ -279,11 +262,12 @@
 
     .summary-view.visible { display: block; }
 
-    .summary-meta {
+    .summary-actions {
       display: flex;
       align-items: center;
       gap: 10px;
       margin-bottom: 24px;
+      flex-wrap: wrap;
     }
 
     .summary-source {
@@ -304,6 +288,25 @@
       border-radius: 20px;
       font-weight: 500;
     }
+
+    .pdf-btn {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #1a1a18;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .pdf-btn:hover { opacity: 0.75; }
 
     .summary-title {
       font-family: 'Instrument Serif', serif;
@@ -329,10 +332,78 @@
     }
 
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    @keyframes shimmer { 0%{opacity:0.4} 100%{opacity:1} }
 
-    /* Input box */
+    /* ── Q&A messages zone (inside summary-view) ── */
+    .qa-messages-zone {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .qa-messages-zone.visible {
+      display: flex;
+    }
+
+    .qa-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    .qa-row.user { justify-content: flex-end; }
+    .qa-row.ai   { justify-content: flex-start; }
+
+    .qa-bubble {
+      padding: 9px 13px;
+      font-size: 0.85rem;
+      line-height: 1.65;
+      max-width: 72%;
+      word-break: break-word;
+    }
+
+    .qa-bubble.user {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 14px 14px 3px 14px;
+      color: var(--text);
+    }
+
+    .qa-bubble.ai {
+      background: #f0f4ff;
+      border: 1px solid #dce6ff;
+      border-radius: 3px 14px 14px 14px;
+      color: var(--text);
+    }
+
+    .qa-bubble.ai.streaming::after {
+      content: '▋';
+      animation: blink 0.7s infinite;
+      color: var(--accent);
+    }
+
+    .qa-avatar {
+      width: 26px;
+      height: 26px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      background: var(--white);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      color: var(--muted);
+      align-self: flex-end;
+      margin-bottom: 1px;
+    }
+
+    /* ── Input area ── */
     .input-area {
-      padding: 16px 24px 20px;
+      padding: 12px 24px 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -346,13 +417,15 @@
       border-radius: 14px;
       padding: 14px 16px 10px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.05);
-      transition: border-color 0.2s, box-shadow 0.2s;
+      transition: border-color 0.2s;
     }
 
-    .input-box:focus-within {
+    .input-box.qa-mode {
       border-color: #b0c4ff;
-      box-shadow: 0 2px 20px rgba(26,107,255,0.1);
+      box-shadow: 0 0 0 3px rgba(26,107,255,0.06), 0 2px 12px rgba(0,0,0,0.05);
     }
+
+    .input-box.url-mode { border-color: var(--accent); }
 
     textarea {
       width: 100%;
@@ -378,11 +451,23 @@
       margin-top: 10px;
     }
 
-    .input-left {
-      display: flex;
+    .input-left { display: flex; align-items: center; gap: 6px; }
+
+    /* mode badge shown in qa mode */
+    .mode-badge {
+      display: none;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
+      font-size: 0.72rem;
+      color: var(--accent);
+      background: #e8f0ff;
+      border: 1px solid #c5d8ff;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 500;
     }
+
+    .mode-badge.visible { display: flex; }
 
     .attach-btn {
       width: 30px; height: 30px;
@@ -393,10 +478,8 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 0.85rem;
       color: var(--muted);
-      transition: all 0.15s;
     }
 
-    .attach-btn:hover { border-color: #bbb; color: var(--text); }
     .attach-btn.has-file { background: #e8f0ff; border-color: #c5d8ff; color: var(--accent); }
 
     .file-name-pill {
@@ -415,7 +498,28 @@
 
     .file-name-pill button {
       border: none; background: none; cursor: pointer;
-      color: var(--accent); font-size: 0.8rem; padding: 0; line-height: 1;
+      color: var(--accent); font-size: 0.8rem; padding: 0;
+    }
+
+    .url-pill {
+      display: none;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.75rem;
+      color: var(--accent);
+      background: #e8f0ff;
+      border: 1px solid #c5d8ff;
+      padding: 3px 10px 3px 7px;
+      border-radius: 20px;
+      max-width: 200px;
+    }
+
+    .url-pill.visible { display: flex; }
+    .url-pill span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .url-pill button {
+      border: none; background: none; cursor: pointer;
+      color: var(--accent); font-size: 0.8rem; padding: 0; flex-shrink: 0;
     }
 
     .send-btn {
@@ -426,7 +530,6 @@
       cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       color: white;
-      font-size: 0.8rem;
       transition: opacity 0.15s;
       flex-shrink: 0;
     }
@@ -436,82 +539,90 @@
 
     #fileInput { display: none; }
 
-    /* Scrollbar */
     .content::-webkit-scrollbar { width: 5px; }
     .content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
   </style>
 </head>
 <body>
 
-<!-- SIDEBAR -->
 <div class="sidebar">
-  <div class="logo">∑ SummAI</div>
-
+  <div class="logo">SummarAI</div>
   <button class="new-btn" onclick="newSession()">
     <div class="icon">✦</div>
     New summary
   </button>
-
   <div class="section-label">Recent</div>
   <div id="historyList"></div>
-
   <div class="sidebar-footer">
     <div class="avatar">U</div>
     <span class="avatar-name">My workspace</span>
   </div>
 </div>
 
-<!-- MAIN -->
 <div class="main">
-  <!-- TOPBAR -->
   <div class="topbar">
     <div class="style-dropdown">
       <div class="style-select" onclick="toggleStyleMenu()">
         <span id="styleLabel">⚡ Concis</span>
-        <span style="color:var(--muted); font-size:0.7rem;">▾</span>
+        <span style="color:var(--muted);font-size:0.7rem;">▾</span>
       </div>
       <div class="style-menu" id="styleMenu">
-        <div class="style-option selected" onclick="setStyle('concis', '⚡ Concis', this)">⚡ Concis</div>
-        <div class="style-option" onclick="setStyle('détaillé', '📄 Détaillé', this)">📄 Détaillé</div>
-        <div class="style-option" onclick="setStyle('bullet', '• Bullet Points', this)">• Bullet Points</div>
+        <div class="style-option selected" onclick="setStyle('concis','⚡ Concis',this)">⚡ Concis</div>
+        <div class="style-option" onclick="setStyle('détaillé','📄 Détaillé',this)">📄 Détaillé</div>
+        <div class="style-option" onclick="setStyle('bullet','• Bullet Points',this)">• Bullet Points</div>
       </div>
     </div>
   </div>
 
-  <!-- CONTENT -->
   <div class="content" id="content">
     <div class="welcome" id="welcome">
       <h1>Hi, what can I summarize?</h1>
-      <p>Upload a document, paste text, or type directly to get clear summaries in seconds.</p>
+      <p>Upload a document, paste text, or drop a URL to get clear summaries in seconds.</p>
     </div>
 
     <div class="summary-view" id="summaryView">
-      <div class="summary-meta">
+      <div class="summary-actions">
         <span class="summary-source" id="summarySource">Text input</span>
         <span class="summary-style-badge" id="summaryStyleBadge">Concis</span>
+        <button class="pdf-btn" onclick="downloadPDF()">⬇ Télécharger PDF</button>
       </div>
       <div class="summary-title" id="summaryTitle"></div>
       <div class="summary-body" id="summaryBody"></div>
+
+      <!-- Q&A messages shown inline after summary -->
+      <div class="qa-messages-zone" id="qaMessagesZone"></div>
     </div>
   </div>
 
-  <!-- INPUT -->
   <div class="input-area">
-    <div class="input-box">
-      <textarea id="userInput" placeholder="Start typing or paste a web link…" rows="1"
-        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"
-        oninput="autoResize(this)"></textarea>
+    <div class="input-box" id="inputBox">
+      <textarea id="userInput"
+        placeholder="Start typing, paste a URL (https://…), or attach a file…"
+        rows="1"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();handleSend()}"
+        oninput="handleInputChange(this)"></textarea>
       <div class="input-actions">
         <div class="input-left">
-          <button class="attach-btn" id="attachBtn" onclick="document.getElementById('fileInput').click()" title="Upload file">📎</button>
+          <!-- shown in summary mode -->
+          <button class="attach-btn" id="attachBtn" onclick="document.getElementById('fileInput').click()">📎</button>
           <div class="file-name-pill" id="fileNamePill">
             <span>📄</span>
             <span id="fileNameText"></span>
             <button onclick="clearFile()">×</button>
           </div>
+          <div class="url-pill" id="urlPill">
+            <span>🌐</span>
+            <span id="urlPillText"></span>
+            <button onclick="clearUrl()">×</button>
+          </div>
+          <!-- shown in qa mode -->
+          <div class="mode-badge" id="modeBadge">💬 Q&A mode</div>
         </div>
-        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        <button class="send-btn" id="sendBtn" onclick="handleSend()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
         </button>
       </div>
     </div>
@@ -522,10 +633,15 @@
 <script>
   let currentStyle = 'concis';
   let currentFile = null;
+  let currentUrl = '';
   let isStreaming = false;
+  let isQaStreaming = false;
   let sessionHistory = [];
+  let currentSessionId = null;
+  let appMode = 'summary'; // 'summary' | 'qa'
 
-  // ── Style selector ──
+  // ── Style menu ──────────────────────────────────────────────────────
+
   function toggleStyleMenu() {
     document.getElementById('styleMenu').classList.toggle('open');
   }
@@ -544,11 +660,88 @@
     }
   });
 
-  // ── File handling ──
+  // ── Unified send handler ─────────────────────────────────────────────
+
+  function handleSend() {
+    if (appMode === 'qa') {
+      sendQuestion();
+    } else {
+      sendMessage();
+    }
+  }
+
+  // ── Switch to Q&A mode ───────────────────────────────────────────────
+
+  function enterQaMode() {
+    appMode = 'qa';
+    const input = document.getElementById('userInput');
+    const inputBox = document.getElementById('inputBox');
+    const attachBtn = document.getElementById('attachBtn');
+    const modeBadge = document.getElementById('modeBadge');
+
+    input.placeholder = 'Ask a question about this document…';
+    inputBox.classList.add('qa-mode');
+    attachBtn.style.display = 'none';
+    modeBadge.classList.add('visible');
+    clearFile();
+    clearUrl();
+    input.focus();
+  }
+
+  function exitQaMode() {
+    appMode = 'summary';
+    const input = document.getElementById('userInput');
+    const inputBox = document.getElementById('inputBox');
+    const attachBtn = document.getElementById('attachBtn');
+    const modeBadge = document.getElementById('modeBadge');
+
+    input.placeholder = 'Start typing, paste a URL (https://…), or attach a file…';
+    inputBox.classList.remove('qa-mode');
+    attachBtn.style.display = '';
+    modeBadge.classList.remove('visible');
+  }
+
+  // ── Append a message row to the Q&A zone ────────────────────────────
+
+  function appendUserBubble(text) {
+    const zone = document.getElementById('qaMessagesZone');
+    const row = document.createElement('div');
+    row.className = 'qa-row user';
+    row.innerHTML = '<div class="qa-bubble user">' + escapeHtml(text) + '</div>';
+    zone.appendChild(row);
+    scrollBottom();
+    return row;
+  }
+
+  function appendAiBubble(text, streaming) {
+    const zone = document.getElementById('qaMessagesZone');
+    const row = document.createElement('div');
+    row.className = 'qa-row ai';
+    const bubble = document.createElement('div');
+    bubble.className = 'qa-bubble ai' + (streaming ? ' streaming' : '');
+    if (text) bubble.textContent = text;
+    const avatar = document.createElement('div');
+    avatar.className = 'qa-avatar';
+    avatar.textContent = '✦';
+    row.appendChild(avatar);
+    row.appendChild(bubble);
+    zone.appendChild(row);
+    scrollBottom();
+    return bubble;
+  }
+
+  function scrollBottom() {
+    const c = document.getElementById('content');
+    c.scrollTop = c.scrollHeight;
+  }
+
+  // ── File & URL handling ──────────────────────────────────────────────
+
   function handleFile(input) {
     const file = input.files[0];
     if (!file) return;
     currentFile = file;
+    clearUrl();
     document.getElementById('attachBtn').classList.add('has-file');
     document.getElementById('fileNameText').textContent = file.name.length > 20 ? file.name.slice(0, 20) + '…' : file.name;
     document.getElementById('fileNamePill').classList.add('visible');
@@ -561,44 +754,71 @@
     document.getElementById('fileNamePill').classList.remove('visible');
   }
 
-  // ── Auto resize textarea ──
+  function clearUrl() {
+    currentUrl = '';
+    document.getElementById('urlPill').classList.remove('visible');
+    document.getElementById('inputBox').classList.remove('url-mode');
+  }
+
+  function handleInputChange(el) {
+    autoResize(el);
+    if (appMode === 'qa') return;
+    const val = el.value.trim();
+    if (/^https?:\/\/.{4,}/.test(val)) {
+      currentUrl = val;
+      clearFile();
+      document.getElementById('urlPillText').textContent = val.length > 30 ? val.slice(0, 30) + '…' : val;
+      document.getElementById('urlPill').classList.add('visible');
+      document.getElementById('inputBox').classList.add('url-mode');
+    } else {
+      if (currentUrl) clearUrl();
+    }
+  }
+
   function autoResize(el) {
     el.style.height = 'auto';
     el.style.height = Math.min(el.scrollHeight, 140) + 'px';
   }
 
-  // ── New session ──
+  // ── Session ──────────────────────────────────────────────────────────
+
   function newSession() {
     document.getElementById('welcome').style.display = 'flex';
     document.getElementById('summaryView').classList.remove('visible');
+    document.getElementById('qaMessagesZone').innerHTML = '';
+    document.getElementById('qaMessagesZone').classList.remove('visible');
     document.getElementById('userInput').value = '';
+    currentSessionId = null;
     clearFile();
+    clearUrl();
+    exitQaMode();
   }
 
-  // ── Load history item ──
+  // ── History sidebar ──────────────────────────────────────────────────
+
   function loadHistoryItem(item) {
-    showSummary(item.text, item.summary, item.style, item.source);
-    // Mark active
+    document.getElementById('welcome').style.display = 'none';
+    document.getElementById('summaryView').classList.add('visible');
+    document.getElementById('summaryTitle').textContent = item.title;
+    document.getElementById('summarySource').textContent = item.source;
+    document.getElementById('summaryStyleBadge').textContent = item.style;
+    const bodyEl = document.getElementById('summaryBody');
+    if (item.style === 'Bullet Points') {
+      renderBullets(item.summary, bodyEl);
+    } else {
+      bodyEl.textContent = item.summary;
+      bodyEl.style.whiteSpace = 'pre-wrap';
+    }
+    currentSessionId = item.sessionId || null;
+    document.getElementById('qaMessagesZone').innerHTML = '';
+    document.getElementById('qaMessagesZone').classList.remove('visible');
+    exitQaMode();
+
     document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
-    const el = document.querySelector(`[data-id="${item.id}"]`);
+    const el = document.querySelector('[data-id="' + item.id + '"]');
     if (el) el.classList.add('active');
   }
 
-  // ── Show summary view ──
-  function showSummary(inputText, summaryText, style, source) {
-    document.getElementById('welcome').style.display = 'none';
-    const view = document.getElementById('summaryView');
-    view.classList.add('visible');
-
-    // Title = first 6 words of input
-    const words = inputText.trim().split(/\s+/).slice(0, 6).join(' ');
-    document.getElementById('summaryTitle').textContent = words + (inputText.split(/\s+/).length > 6 ? '…' : '');
-    document.getElementById('summarySource').textContent = source || 'Text input';
-    document.getElementById('summaryStyleBadge').textContent = style;
-    document.getElementById('summaryBody').textContent = summaryText;
-  }
-
-  // ── Add to sidebar history ──
   function addToSidebar(item) {
     sessionHistory.unshift(item);
     renderSidebar();
@@ -611,51 +831,135 @@
       const div = document.createElement('div');
       div.className = 'history-item';
       div.dataset.id = item.id;
+      const isUrl = item.source && item.source.startsWith('http');
       const isPDF = item.source && item.source.endsWith('.pdf');
-      div.innerHTML = `
-        <span class="file-icon ${isPDF ? 'pdf' : ''}">
-          ${isPDF ? '📄' : '✦'}
-        </span>
-        <span>${item.title}</span>
-        <span class="style-tag">${item.style.slice(0,3)}</span>
-      `;
+      const icon = isUrl ? '🌐' : isPDF ? '📄' : '✦';
+      div.innerHTML =
+        '<span class="file-icon ' + (isPDF ? 'pdf' : '') + '">' + icon + '</span>' +
+        '<span>' + item.title + '</span>' +
+        '<span class="style-tag">' + item.style.slice(0, 3) + '</span>';
       div.onclick = () => loadHistoryItem(item);
       list.appendChild(div);
     });
   }
 
-  // ── Send message ──
+  // ── PDF Export ───────────────────────────────────────────────────────
+
+  function downloadPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    const title = document.getElementById('summaryTitle').textContent;
+    const body  = document.getElementById('summaryBody').textContent;
+    const style = document.getElementById('summaryStyleBadge').textContent;
+    const source = document.getElementById('summarySource').textContent;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.setTextColor(26, 26, 24);
+    doc.text(title, 20, 24);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(136, 136, 128);
+    doc.text('Style: ' + style + '   |   Source: ' + source, 20, 34);
+
+    doc.setDrawColor(226, 225, 219);
+    doc.line(20, 39, 190, 39);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(42, 42, 40);
+    const lines = doc.splitTextToSize(body, 170);
+    doc.text(lines, 20, 50);
+
+    doc.setFontSize(8);
+    doc.setTextColor(180, 180, 175);
+    doc.text('Generated by SummAI', 20, 285);
+    doc.text(new Date().toLocaleDateString('fr-FR'), 170, 285);
+
+    doc.save('SummAI_' + Date.now() + '.pdf');
+  }
+
+  // ── Bullet rendering ─────────────────────────────────────────────────
+
+  function normalizeBullets(text) {
+    text = text.replace(/^.*?(?:here is a summary|voici un résumé|here are|below is)[^\n]*\n?/gi, '');
+    text = text.replace(/^[\s]*[\*\-]\s+/gm, '\u2022 ');
+    return text.trim();
+  }
+
+  function renderBullets(text, targetEl) {
+    const bodyEl = targetEl || document.getElementById('summaryBody');
+    const items = text.split('\n').filter(l => l.trim().startsWith('\u2022'));
+    bodyEl.innerHTML = items.map(line => {
+      const trimmed = line.trim();
+      const match = trimmed.match(/^\u2022\s*\*\*(.*?)\*\*[,:]?\s*(.*)/);
+      if (match) {
+        return '<div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start">'
+          + '<span style="color:#1a6bff;margin-top:3px;flex-shrink:0;font-size:0.85rem">&#9658;</span>'
+          + '<p style="margin:0;line-height:1.75;font-size:0.92rem">'
+          + '<span style="font-weight:600;color:#1a1a18">' + match[1] + '</span>'
+          + (match[2] ? '<span style="color:#4a4a48"> — ' + match[2] + '</span>' : '')
+          + '</p></div>';
+      }
+      const content = trimmed.replace(/^\u2022\s*/, '');
+      return '<div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-start">'
+        + '<span style="color:#1a6bff;margin-top:3px;flex-shrink:0;font-size:0.85rem">&#9658;</span>'
+        + '<p style="margin:0;line-height:1.75;font-size:0.92rem;color:#2a2a28">' + content + '</p>'
+        + '</div>';
+    }).join('');
+    bodyEl.style.whiteSpace = 'normal';
+  }
+
+  // ── Send summary ─────────────────────────────────────────────────────
+
   async function sendMessage() {
     if (isStreaming) return;
     const input = document.getElementById('userInput');
     const text = input.value.trim();
+    const isUrl = /^https?:\/\/.{4,}/.test(text);
+
     if (!text && !currentFile) return;
 
     isStreaming = true;
     document.getElementById('sendBtn').disabled = true;
+    currentSessionId = null;
 
-    const source = currentFile ? currentFile.name : 'Text input';
+    const source = currentFile ? currentFile.name : isUrl ? text : 'Text input';
     const styleLabel = currentStyle === 'concis' ? 'Concis' : currentStyle === 'détaillé' ? 'Détaillé' : 'Bullet Points';
 
-    // Show summary view immediately
     document.getElementById('welcome').style.display = 'none';
-    const view = document.getElementById('summaryView');
-    view.classList.add('visible');
+    document.getElementById('summaryView').classList.add('visible');
+    document.getElementById('qaMessagesZone').innerHTML = '';
+    document.getElementById('qaMessagesZone').classList.remove('visible');
 
-    const words = (text || currentFile.name).trim().split(/\s+/).slice(0, 6).join(' ');
+    const inputText = isUrl ? text : (text || (currentFile ? currentFile.name : ''));
+    const words = inputText.trim().split(/\s+/).slice(0, 6).join(' ');
     document.getElementById('summaryTitle').textContent = words + '…';
     document.getElementById('summarySource').textContent = source;
     document.getElementById('summaryStyleBadge').textContent = styleLabel;
 
-    const body = document.getElementById('summaryBody');
-    body.textContent = '';
-    body.classList.add('streaming');
+    const bodyEl = document.getElementById('summaryBody');
+    bodyEl.innerHTML = '';
+    bodyEl.classList.add('streaming');
 
-    // Build FormData
+    if (currentStyle === 'bullet') {
+      bodyEl.innerHTML = '<div id="bulletLoader" style="display:flex;flex-direction:column;gap:14px;margin-top:4px">'
+        + Array(5).fill('<div style="height:16px;background:#e2e1db;border-radius:6px;animation:shimmer 1.2s infinite alternate"></div>').join('')
+        + '</div>';
+    }
+
     const formData = new FormData();
-    formData.append('text', text);
     formData.append('style', currentStyle);
-    if (currentFile) formData.append('file', currentFile);
+
+    if (isUrl) {
+      formData.append('url', text);
+      formData.append('text', '');
+    } else {
+      formData.append('text', text);
+      if (currentFile) formData.append('file', currentFile);
+    }
 
     let fullSummary = '';
 
@@ -671,48 +975,132 @@
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
         buffer = lines.pop();
-
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             const token = line.slice(6);
             if (token === '[DONE]') break;
+
+            const sessionMatch = token.match(/^__SESSION__(.+)__$/);
+            if (sessionMatch) {
+              currentSessionId = sessionMatch[1];
+              continue;
+            }
+
             fullSummary += token;
-            body.textContent = fullSummary;
-            body.style.whiteSpace = 'pre-wrap';
-            document.getElementById('content').scrollTop = 99999;
+            if (currentStyle !== 'bullet') {
+              bodyEl.innerHTML = '';
+              bodyEl.textContent = fullSummary;
+              bodyEl.style.whiteSpace = 'pre-wrap';
+            }
+            scrollBottom();
           }
         }
       }
     } catch(e) {
-      body.textContent = '⚠️ Connection error. Is the server running?';
+      bodyEl.innerHTML = '<p style="color:#e84040">⚠️ Connection error. Is the server running?</p>';
     }
 
-    body.classList.remove('streaming');
+    bodyEl.classList.remove('streaming');
+    bodyEl.innerHTML = '';
 
-    // Fix title with actual text
-    const finalWords = (text || currentFile?.name || '').trim().split(/\s+/).slice(0, 6).join(' ');
-    document.getElementById('summaryTitle').textContent = finalWords + ((text || '').split(/\s+/).length > 6 ? '…' : '');
+    if (currentStyle === 'bullet') {
+      renderBullets(normalizeBullets(fullSummary));
+    } else {
+      bodyEl.textContent = fullSummary;
+      bodyEl.style.whiteSpace = 'pre-wrap';
+    }
 
-    // Add to sidebar
-    const item = {
+    const finalWords = (isUrl ? text : (text || currentFile?.name || '')).trim().split(/\s+/).slice(0, 6).join(' ');
+    document.getElementById('summaryTitle').textContent = finalWords + (finalWords.split(/\s+/).length >= 6 ? '…' : '');
+
+    // ── After summary done: show Q&A invite bubble ──
+    if (currentSessionId) {
+      const zone = document.getElementById('qaMessagesZone');
+      zone.classList.add('visible');
+      appendAiBubble('Résumé prêt ! Tu as des questions sur ce document ?', false);
+      enterQaMode();
+    }
+
+    addToSidebar({
       id: Date.now(),
       title: finalWords + '…',
-      text: text,
-      summary: fullSummary,
+      text: isUrl ? '' : text,
+      summary: normalizeBullets(fullSummary),
       style: styleLabel,
-      source: source,
-    };
-    addToSidebar(item);
+      source,
+      sessionId: currentSessionId,
+    });
 
-    // Reset
     input.value = '';
     input.style.height = 'auto';
     clearFile();
+    clearUrl();
     isStreaming = false;
     document.getElementById('sendBtn').disabled = false;
   }
 
-  // ── Load server history on start ──
+  // ── Q&A ─────────────────────────────────────────────────────────────
+
+  async function sendQuestion() {
+    if (isQaStreaming || !currentSessionId) return;
+    const input = document.getElementById('userInput');
+    const question = input.value.trim();
+    if (!question) return;
+
+    isQaStreaming = true;
+    document.getElementById('sendBtn').disabled = true;
+    input.value = '';
+    input.style.height = 'auto';
+
+    appendUserBubble(question);
+    const bubble = appendAiBubble('', true);
+
+    const formData = new FormData();
+    formData.append('session_id', currentSessionId);
+    formData.append('question', question);
+
+    let fullAnswer = '';
+
+    try {
+      const response = await fetch('/api/v1/ask', { method: 'POST', body: formData });
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const token = line.slice(6);
+            if (token === '[DONE]') break;
+            fullAnswer += token;
+            bubble.textContent = fullAnswer;
+            scrollBottom();
+          }
+        }
+      }
+    } catch(e) {
+      bubble.innerHTML = '<span style="color:#e84040">⚠️ Erreur de connexion.</span>';
+    }
+
+    bubble.classList.remove('streaming');
+    bubble.textContent = fullAnswer;
+
+    isQaStreaming = false;
+    document.getElementById('sendBtn').disabled = false;
+    input.focus();
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── Server history ────────────────────────────────────────────────────
+
   async function loadServerHistory() {
     try {
       const res = await fetch('/api/v1/history?limit=10');
@@ -722,9 +1110,10 @@
           id: i,
           title: item.summary ? item.summary.split(/\s+/).slice(0, 5).join(' ') + '…' : 'Summary',
           text: item.original_text || '',
-          summary: item.summary || '',
+          summary: normalizeBullets(item.summary || ''),
           style: item.style || 'concis',
           source: 'Text input',
+          sessionId: null,
         });
       });
       renderSidebar();
