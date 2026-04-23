@@ -313,18 +313,6 @@ Input → Parse → Detect Language → NLP (NLTK) → Cache? → Gemini → Tit
 
 ---
 
-## 🗺️ Roadmap
-
-- [ ] Multi-language Q&A (French, Spanish, German)
-- [ ] DOCX / PDF export of summaries
-- [ ] JWT authentication & per-user history
-- [ ] Admin dashboard with analytics
-- [ ] Docker + docker-compose support
-- [ ] Rate limiting with `slowapi`
-- [ ] Unit tests (pytest, 80%+ coverage)
-- [ ] CI/CD pipeline (GitHub Actions)
-
----
 
 ## 🛠️ Tech Stack
 
@@ -347,8 +335,3 @@ This project is licensed under the [MIT License](LICENSE).
 
 ---
 
-<div align="center">
-
-Made with ❤️ and Google Gemini · [Report a bug](issues) · [Request a feature](issues)
-
-</div>
