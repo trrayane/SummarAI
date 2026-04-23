@@ -125,7 +125,7 @@ backend/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/summarai.git
+git clone https://github.com/trrayane/SummarAI.git
 cd summarai/backend
 ```
 
