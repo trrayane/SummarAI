@@ -214,17 +214,7 @@ Liveness check — returns `200 OK` when the service is up.
 
 ---
 
-## 🗺 Roadmap
 
-- [ ] User authentication & per-user history
-- [ ] Persistent storage with relational DB migrations (Alembic)
-- [ ] React / Vue frontend
-- [ ] Docker & Docker Compose support
-- [ ] Extended web scraper (JS-rendered pages via Playwright)
-- [ ] Rate limiting & API key management
-- [ ] Kubernetes deployment manifests
-
----
 
 ## 🔒 Security & Best Practices
 
