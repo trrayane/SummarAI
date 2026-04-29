@@ -8,298 +8,251 @@
 </p>
 
 <h1 align="center">SummarAI</h1>
-<h3 align="center">Assistant de résumé intelligent pour texte, fichiers et pages web</h3>
+<p align="center">
+  <strong>Intelligent summarization assistant for text, files, and web pages.</strong><br/>
+  Powered by Google Gemini 2.5 Flash · Built with FastAPI · Enhanced with NLP
+</p>
+
+<p align="center">
+  <a href="#-features">Features</a> ·
+  <a href="#-architecture">Architecture</a> ·
+  <a href="#-getting-started">Getting Started</a> ·
+  <a href="#-api-reference">API Reference</a> ·
+  <a href="#-roadmap">Roadmap</a>
+</p>
 
 ---
 
-## Table des matières
+## Overview
 
-- [Présentation](#présentation)
-- [Fonctionnalités](#fonctionnalités)
-- [Architecture](#architecture)
-- [Structure du projet](#structure-du-projet)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Exécution](#exécution)
-- [API](#api)
-- [Bonnes pratiques](#bonnes-pratiques)
-- [Pour aller plus loin](#pour-aller-plus-loin)
-- [Licence](#licence)
+**SummarAI** is a production-ready content summarization engine that transforms raw text, documents, and web pages into clean, readable summaries — streamed in real time to the browser.
+
+The stack is intentionally lean and transparent:
+
+- **FastAPI** serves both the REST API and the static frontend from a single process
+- **Google Gemini 2.5 Flash** handles generation via LangChain
+- **NLTK** pre-processes input to maximize prompt quality
+- **SSE (Server-Sent Events)** streams tokens progressively to the client
+- A built-in **Q&A mode** lets users interrogate any summarized document
 
 ---
 
-## Présentation
+## ✨ Features
 
-SummarAI est une application de résumé de contenu qui transforme automatiquement du texte brut, des fichiers et des pages web en synthèses lisibles.
-
-Le projet combine :
-
-- un backend **Python / FastAPI** pour servir l’API et l’interface statique
-- un moteur de génération basé sur **Google Gemini 2.5 Flash**
-- un prétraitement linguistique avec **NLTK**
-- une extraction de contenu depuis **PDF, DOCX, TXT** et **URLs web**
-- un mode **Q&A** pour interroger le document après résumé
-
-SummarAI est conçu pour être déployé localement en développement et offre une base claire pour ajouter de l’authentification, du stockage persistant ou un packaging Docker.
+| Category | Details |
+|----------|---------|
+| **Input sources** | Plain text, PDF, DOCX, TXT, and any public URL |
+| **Real-time streaming** | Tokens streamed via SSE for a responsive UX |
+| **Q&A mode** | Ask follow-up questions against the source document |
+| **Session management** | In-memory session store for multi-turn interactions |
+| **NLP preprocessing** | Tokenization, cleaning, and prompt enrichment with NLTK |
+| **History** | Optional MySQL backend for persistent summary history |
+| **Static frontend** | Self-contained UI served directly by the backend |
 
 ---
 
-## Fonctionnalités
-
-- Résumé de contenu à partir du texte saisi
-- Résumé de contenu à partir de fichiers PDF, DOCX et TXT
-- Résumé de contenu à partir d’une URL web
-- Streaming du résumé vers le front-end via SSE pour un rendu progressif
-- Q&A basé sur le document résumé
-- Historique de sessions et des résumés
-- Prétraitement NLP afin d’améliorer la qualité des prompts
-- Frontend statique servi par le backend
-
----
-
-
-## Architecture
+## 🏗 Architecture
 
 ```mermaid
-%% Diagramme d'architecture SummarAI
 graph TD
-  A[Utilisateur] -->|Texte/Fichier/URL| B[Frontend statique]
-  B -->|Requête API| C[FastAPI Backend]
-  C --> D[Prétraitement NLP (NLTK)]
-  C --> E[Extraction PDF/DOCX/TXT/URL]
-  C --> F[Gemini 2.5 Flash (API)]
-  C --> G[Historique MySQL]
-  C --> H[Session Store]
-  F -->|Résumé/Q&A| B
-  G -->|Historique| B
+  A[User] -->|Text / File / URL| B[Static Frontend]
+  B -->|REST / SSE| C[FastAPI Backend]
+  C --> D[NLP Preprocessing — NLTK]
+  C --> E[File Parser — PDF · DOCX · TXT]
+  C --> F[Web Scraper]
+  C --> G[Gemini 2.5 Flash via LangChain]
+  C --> H[MySQL — History]
+  C --> I[Session Store — in-memory]
+  G -->|Summary / Q&A stream| B
+  H -->|Past summaries| B
 ```
 
-Les composants principaux sont :
+### Module map
 
-- `backend/main.py` : point d’entrée de l’application, configuration CORS, lifecyle FastAPI et montage des fichiers statiques
-- `backend/api/routes.py` : définition des endpoints REST (`/api/v1/summarize`, `/api/v1/ask`, `/api/v1/health`)
-- `backend/agents/summarizer_agent.py` : orchestration du résumé et de la logique Q&A
-- `backend/services/gemini_service.py` : wrapper d’appel vers Gemini et LangChain
-- `backend/services/history_service.py` : stockage et récupération de l’historique des résumés
-- `backend/preprocessing/nltk_processor.py` : nettoyage du texte et génération de données utiles pour les prompts
-- `backend/tools/file_parser.py` : extraction de texte depuis PDF, DOCX et TXT
-- `backend/tools/web_scraper.py` : récupération et nettoyage de contenu HTML depuis une URL
-- `backend/memory/session_store.py` : gestion de la session et du document courant pour le mode Q&A
-- `backend/static/index.html` : interface utilisateur de l’application
-
----
-
-## Structure du projet
-
-Voici l’arborescence complète avec une description de chaque élément :
-
-### Racine
-
-- `README.md` : documentation du projet
-- `.env` : fichier de configuration des variables d’environnement (non versionné)
-- `.gitignore` : ignore les fichiers temporaires et l’environnement virtuel
-- `backend/` : dossier principal de l’application
-
-### Dossier `backend/`
-
-- `main.py` : lancement du serveur FastAPI et montage du frontend
-- `requirements.txt` : dépendances Python listées pour `pip install`
-- `venv/` : environnement virtuel local (à ignorer dans le dépôt)
-
-#### `backend/agents/`
-
-- `summarizer_agent.py` : logique métier de résumé et Q&A
-
-#### `backend/api/`
-
-- `routes.py` : routes FastAPI exposant l’API
-
-#### `backend/config/`
-
-- `settings.py` : gestion des paramètres via `pydantic-settings`
-
-#### `backend/memory/`
-
-- `session_store.py` : stockage temporaire de session et des documents résumés
-
-#### `backend/preprocessing/`
-
-- `nltk_processor.py` : prétraitement du texte, tokenisation et nettoyage
-
-#### `backend/prompts/`
-
-- `style_prompts.py` : prompts définis pour les différents styles de résumé
-
-#### `backend/services/`
-
-- `gemini_service.py` : intégration avec le modèle Gemini
-- `history_service.py` : historique et cache des résumés
-
-#### `backend/tools/`
-
-- `file_parser.py` : extraction de texte à partir de fichiers PDF, DOCX et TXT
-- `web_scraper.py` : extraction de texte à partir de pages web
-
-#### `backend/static/`
-
-- `index.html` : interface utilisateur web statique
+```
+backend/
+├── main.py                     # App entry point, CORS, lifecycle, static mount
+├── api/
+│   └── routes.py               # REST endpoints (/summarize · /ask · /health)
+├── agents/
+│   └── summarizer_agent.py     # Orchestration: summarization & Q&A logic
+├── services/
+│   ├── gemini_service.py       # Gemini / LangChain wrapper
+│   └── history_service.py      # Summary storage & retrieval
+├── preprocessing/
+│   └── nltk_processor.py       # Text cleaning, tokenization, prompt data
+├── prompts/
+│   └── style_prompts.py        # Prompt templates per summary style
+├── tools/
+│   ├── file_parser.py          # PDF · DOCX · TXT extraction
+│   └── web_scraper.py          # HTML fetch & clean
+├── memory/
+│   └── session_store.py        # Session & current-document store for Q&A
+├── config/
+│   └── settings.py             # Pydantic settings / env loader
+└── static/
+    └── index.html              # Single-page frontend
+```
 
 ---
 
+## 🚀 Getting Started
 
-## Prérequis
+### Prerequisites
 
 - Python 3.10+
 - pip
-- (Optionnel) MySQL pour l’historique
+- *(Optional)* MySQL 8+ for persistent history
 
-## Installation
+### Installation
 
-1. Placez-vous dans le dossier du projet :
+```bash
+# 1. Clone the repository
+git clone https://github.com/your-username/SummarAI.git
+cd SummarAI
 
-```powershell
-cd C:\Users\HP\Desktop\SummarAI
-```
-
-2. Créez et activez un environnement virtuel :
-
-```powershell
+# 2. Create and activate a virtual environment
 python -m venv .venv
-.\.venv\Scripts\activate
+source .venv/bin/activate        # macOS / Linux
+# .\.venv\Scripts\activate       # Windows PowerShell
+
+# 3. Install dependencies
+pip install -r backend/requirements.txt
 ```
 
-3. Installez les dépendances :
+### Configuration
 
-```powershell
-pip install -r backend\requirements.txt
-```
-
----
-
-## Configuration
-
-Créez un fichier `.env` dans le dossier `backend/` contenant les variables suivantes :
+Create a `.env` file inside `backend/` and fill in the values below:
 
 ```env
-GEMINI_API_KEY=ton_api_key
+# ── Gemini ────────────────────────────────────────────────
+GEMINI_API_KEY=your_api_key_here
 GEMINI_MODEL=gemini-2.5-flash
 GEMINI_TEMPERATURE=0.3
 GEMINI_MAX_TOKENS=2048
+
+# ── MySQL (optional — app runs without it) ────────────────
 MYSQL_HOST=localhost
 MYSQL_PORT=3306
 MYSQL_USER=root
-MYSQL_PASSWORD=rayane
+MYSQL_PASSWORD=your_password
 MYSQL_DATABASE=ai_summarizer
+
+# ── Server ────────────────────────────────────────────────
 HOST=0.0.0.0
 PORT=8000
 DEBUG=True
 ALLOWED_ORIGINS=["*"]
 ```
 
-- `GEMINI_API_KEY` : clé API Gemini
-- `MYSQL_*` : configuration MySQL pour l’historique
-- `HOST`, `PORT`, `DEBUG` : configuration du serveur
-- `ALLOWED_ORIGINS` : origines autorisées pour CORS
+> **Security note:** never commit your `GEMINI_API_KEY`. The `.gitignore` already excludes `.env`.
 
-> Si MySQL est indisponible, le backend continuera de fonctionner sans historique.
-
----
-
-
-## Exemples d'utilisation API
-
-### Résumer un texte (curl)
+### Running
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/summarize" \
-  -H "Content-Type: application/json" \
-  -d '{"source": "texte", "content": "Votre texte à résumer ici."}'
-```
-
-### Résumer un fichier (Python)
-
-```python
-import requests
-files = {'file': open('monfichier.pdf', 'rb')}
-r = requests.post('http://localhost:8000/api/v1/summarize', files=files)
-print(r.json())
-```
-
-### Q&A sur un résumé
-
-```bash
-curl -X POST "http://localhost:8000/api/v1/ask" \
-  -H "Content-Type: application/json" \
-  -d '{"session_id": "SESSION_ID", "question": "Quelle est la thèse principale ?"}'
-```
-
-## Liens utiles
-
-- [FastAPI Docs](https://fastapi.tiangolo.com/)
-- [Gemini API](https://ai.google.dev/gemini-api/docs)
-- [LangChain](https://python.langchain.com/)
-- [NLTK](https://www.nltk.org/)
-
-
-Lancez l’application depuis `backend/` :
-
-```powershell
+cd backend
 python main.py
 ```
 
-Ensuite, ouvrez l’application :
-
-- Interface utilisateur : `http://localhost:8000`
-- Swagger UI : `http://localhost:8000/docs`
-
----
-
-## API
-
-### POST `/api/v1/summarize`
-
-Cet endpoint reçoit un texte, un fichier ou une URL et renvoie un résumé.
-
-- Source : texte libre, fichier PDF/DOCX/TXT, URL
-- Résultat : résumé textuel généré par Gemini
-- Streaming : le backend peut renvoyer les tokens au fur et à mesure via SSE
-
-### POST `/api/v1/ask`
-
-Cet endpoint reçoit une question et une session, puis renvoie une réponse contextualisée sur le document résumé.
-
-- Utilise la session pour retrouver le document stocké
-- Interroge le modèle avec le contexte du texte source
-
-### GET `/api/v1/health`
-
-Endpoint de contrôle pour vérifier si le service est actif.
+| URL | Description |
+|-----|-------------|
+| `http://localhost:8000` | Web UI |
+| `http://localhost:8000/docs` | Interactive Swagger docs |
+| `http://localhost:8000/redoc` | ReDoc API reference |
 
 ---
 
-## Bonnes pratiques
+## 📡 API Reference
 
-- Ne commitez jamais votre clé Gemini.
-- En production, utilisez `DEBUG=False`.
-- Restreignez `ALLOWED_ORIGINS` à vos domaines applicatifs.
-- Limitez la taille des documents pour rester dans les quotas Gemini.
-- Ajoutez une gestion d’erreurs réseau / timeout pour l’API Gemini.
+### `POST /api/v1/summarize`
+
+Accepts text, a file, or a URL and returns a generated summary. Supports SSE streaming.
+
+**JSON body (text source)**
+```json
+{
+  "source": "text",
+  "content": "The content you want to summarize."
+}
+```
+
+**Multipart form (file source)**
+```bash
+curl -X POST http://localhost:8000/api/v1/summarize \
+     -F "file=@report.pdf"
+```
+
+**Python example**
+```python
+import requests
+
+with open("report.pdf", "rb") as f:
+    response = requests.post(
+        "http://localhost:8000/api/v1/summarize",
+        files={"file": f}
+    )
+print(response.json())
+```
 
 ---
 
-## Pour aller plus loin
+### `POST /api/v1/ask`
 
-Idées d’amélioration :
+Ask a follow-up question against a previously summarized document.
 
-- Ajout de l’authentification et des utilisateurs
-- Stockage persistant avec base de données et historique utilisateur
-- Interface de gestion des résumés
-- Déploiement Docker / Kubernetes
-- Extension du parsing web pour gérer plus de sites
-- Ajout d’un vrai frontend React ou Vue
+```bash
+curl -X POST http://localhost:8000/api/v1/ask \
+     -H "Content-Type: application/json" \
+     -d '{"session_id": "<SESSION_ID>", "question": "What is the main argument?"}'
+```
 
 ---
 
-## Licence
+### `GET /api/v1/health`
 
-Ce projet est distribué sous licence **MIT**.
+Liveness check — returns `200 OK` when the service is up.
+
+---
+
+## 🗺 Roadmap
+
+- [ ] User authentication & per-user history
+- [ ] Persistent storage with relational DB migrations (Alembic)
+- [ ] React / Vue frontend
+- [ ] Docker & Docker Compose support
+- [ ] Extended web scraper (JS-rendered pages via Playwright)
+- [ ] Rate limiting & API key management
+- [ ] Kubernetes deployment manifests
+
+---
+
+## 🔒 Security & Best Practices
+
+- Set `DEBUG=False` in any non-development environment
+- Restrict `ALLOWED_ORIGINS` to your actual domains in production
+- Rotate your Gemini API key regularly and use scoped service accounts where possible
+- Enforce document size limits to stay within Gemini token quotas
+- Add network-level timeouts on outbound Gemini API calls
+
+---
+
+## 📦 Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| API framework | FastAPI 0.111 |
+| LLM | Google Gemini 2.5 Flash |
+| LLM orchestration | LangChain 0.2 |
+| NLP preprocessing | NLTK 3.8 |
+| File parsing | PyMuPDF · python-docx |
+| Web scraping | httpx · BeautifulSoup4 |
+| Settings management | pydantic-settings |
+| Database (optional) | MySQL 8 |
+
+---
+
+## 📄 License
+
+Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for details.
+
+---
