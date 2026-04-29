@@ -7,8 +7,8 @@ des questions sur le document original.
 
 import time
 
-# Durée de vie d'une session en secondes (1h)
-SESSION_TTL = 3600
+# Durée de vie d'une session en secondes (2h)
+SESSION_TTL = 7200
 
 # Structure : {session_id: {"text": str, "expires_at": float}}
 _store: dict[str, dict] = {}
